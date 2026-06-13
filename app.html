@@ -865,12 +865,19 @@ function closePreviewBg(e) { if(e.target.id==='previewModal') closePreview(); }
 
 async function doShare() {
   closePreview();
-  if(navigator.share && navigator.canShare && navigator.canShare({ files: _dispatchFiles })) {
-    try { await navigator.share({ files: _dispatchFiles }); } catch(e) {}
-  } else if(navigator.share) {
-    try { await navigator.share({ text: _shareText }); } catch(e) {}
-  } else {
-    navigator.clipboard.writeText(_shareText).then(()=>{ showToast('복사됐습니다.'); });
+  try {
+    if(navigator.share) {
+      if(_dispatchFiles.length > 0 && navigator.canShare && navigator.canShare({files: _dispatchFiles})) {
+        await navigator.share({files: _dispatchFiles});
+      } else {
+        await navigator.share({text: _shareText});
+      }
+    } else {
+      await navigator.clipboard.writeText(_shareText);
+      showToast('복사됐습니다.');
+    }
+  } catch(e) {
+    showToast('공유 실패: ' + e.message);
   }
   _dispatchFiles = [];
 }
