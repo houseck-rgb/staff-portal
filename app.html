@@ -631,62 +631,47 @@ function clearPhoto(inputId, prevId, phId, boxId, clrId) {
 }
 
 async function sendDispatch() {
-  const dateRaw  = document.getElementById('dp_date').value;
-  const store    = getChip('dp_store');
-  const time     = getChip('dp_time');
-  const pos      = getChip('dp_pos');
-  const reg      = document.getElementById('dp_reg').value.trim();
-  const bank     = document.getElementById('dp_bank').value.trim();
-  const acctNum  = document.getElementById('dp_acct_num').value.trim();
+  const dateRaw = document.getElementById('dp_date').value;
+  const store = getChip('dp_store');
+  const time = getChip('dp_time');
+  const pos = getChip('dp_pos');
+  const reg = document.getElementById('dp_reg').value.trim();
+  const bank = document.getElementById('dp_bank').value.trim();
+  const acctNum = document.getElementById('dp_acct_num').value.trim();
 
   let dateStr = '—';
   if(dateRaw){ const[y,m,d]=dateRaw.split('-'); dateStr=y+'년 '+m+'월 '+d+'일'; }
 
-  // 공유 텍스트 (텍스트만 공유 fallback용)
-  let msg =
-    '[최우영씨푸드 파출 안내]\n\n' +
-    '매장   : ' + (store||'—') + '\n' +
-    '날짜   : ' + dateStr + '\n' +
-    '시간   : ' + (time||'—') + '\n' +
-    '포지션 : ' + (pos||'—');
-  if(reg)     msg += '\n등록번호 : ' + reg;
-  if(bank)    msg += '\n은행명   : ' + bank;
-  if(acctNum) msg += '\n계좌번호 : ' + acctNum;
-  _shareText = msg;
-
-  // ── 텍스트 카드 이미지 생성 ──
   const lines = [
-    { label:'매장',   val: store||'—' },
-    { label:'날짜',   val: dateStr },
-    { label:'시간',   val: time||'—' },
+    { label:'매장', val: store||'—' },
+    { label:'날짜', val: dateStr },
+    { label:'시간', val: time||'—' },
     { label:'포지션', val: pos||'—' },
   ];
-  if(reg)     lines.push({ label:'등록번호', val: reg });
-  if(bank)    lines.push({ label:'은행명',   val: bank });
+  if(reg) lines.push({ label:'등록번호', val: reg });
+  if(bank) lines.push({ label:'은행명', val: bank });
   if(acctNum) lines.push({ label:'계좌번호', val: acctNum });
 
   const title = '[최우영씨푸드 파출 안내]';
-  const cardUrl  = makeCard(title, lines);
+  const cardUrl = makeCard(title, lines);
   const cardFile = await makeCardFile(title, lines, '파출안내.png');
 
-  // 사진 파일 수집
-  const regFile  = document.getElementById('photo_reg').files[0];
+  const regFile = document.getElementById('photo_reg').files[0];
   const acctFile = document.getElementById('photo_acct').files[0];
   _dispatchFiles = [cardFile];
-  if(regFile)  _dispatchFiles.push(new File([regFile],  '등록증.jpg',  {type: regFile.type}));
+  if(regFile) _dispatchFiles.push(new File([regFile], '등록증.jpg', {type: regFile.type}));
   if(acctFile) _dispatchFiles.push(new File([acctFile], '계좌사진.jpg', {type: acctFile.type}));
 
-  // 미리보기 박스
+  _shareText = title;
+
   const box = document.getElementById('previewBox');
   let photoHtml = '';
-  const prevReg  = document.getElementById('prev_reg');
+  const prevReg = document.getElementById('prev_reg');
   const prevAcct = document.getElementById('prev_acct');
-  if(regFile  && prevReg.src)  photoHtml += '<div class="pv-thumb-wrap"><div class="pv-thumb-label">등록증 사진</div><img class="pv-thumb" src="'+prevReg.src+'"></div>';
+  if(regFile && prevReg.src) photoHtml += '<div class="pv-thumb-wrap"><div class="pv-thumb-label">등록증 사진</div><img class="pv-thumb" src="'+prevReg.src+'"></div>';
   if(acctFile && prevAcct.src) photoHtml += '<div class="pv-thumb-wrap"><div class="pv-thumb-label">계좌 사진</div><img class="pv-thumb" src="'+prevAcct.src+'"></div>';
 
-  box.innerHTML =
-    '<img src="'+cardUrl+'" style="width:100%;border-radius:8px;display:block;margin-bottom:12px;">' +
-    photoHtml;
+  box.innerHTML = '<img src="'+cardUrl+'" style="width:100%;border-radius:8px;display:block;margin-bottom:12px;">' + photoHtml;
 
   closeDispatch();
   document.getElementById('previewModal').classList.add('open');
@@ -880,20 +865,12 @@ function closePreviewBg(e) { if(e.target.id==='previewModal') closePreview(); }
 
 async function doShare() {
   closePreview();
-  if(navigator.share) {
-    try {
-      if(_dispatchFiles.length > 0 && navigator.canShare && navigator.canShare({ files: _dispatchFiles })) {
-        // 이미지 파일만 공유 (텍스트 없이) — 카카오톡 호환
-        await navigator.share({ files: _dispatchFiles });
-      } else {
-        // 파일 공유 불가 시 텍스트 fallback
-        await navigator.share({ text: _shareText });
-      }
-    } catch(e) {}
+  if(navigator.share && navigator.canShare && navigator.canShare({ files: _dispatchFiles })) {
+    try { await navigator.share({ files: _dispatchFiles }); } catch(e) {}
+  } else if(navigator.share) {
+    try { await navigator.share({ text: _shareText }); } catch(e) {}
   } else {
-    navigator.clipboard.writeText(_shareText).then(()=>{
-      showToast('클립보드에 복사됐습니다.');
-    }).catch(()=>{ showToast('공유 기능을 지원하지 않는 환경입니다.'); });
+    navigator.clipboard.writeText(_shareText).then(()=>{ showToast('복사됐습니다.'); });
   }
   _dispatchFiles = [];
 }
