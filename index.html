@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="최우영씨푸드">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>최우영씨푸드그룹</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{
+  height:100%;width:100%;
+  background:#F0F2F8;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+/* 이미지를 화면에 꽉 채우되 비율 유지 */
+.scene{
+  position:relative;
+  /* 정사각형 이미지 → 세로로 화면 채우기 */
+  width:100vmin;
+  height:100vmin;
+  max-width:100vw;
+  max-height:100vh;
+}
+.scene img{
+  width:100%;height:100%;
+  object-fit:cover;
+  display:block;
+  pointer-events:none;
+  user-select:none;
+}
+/* 투명 클릭 레이어 */
+.hit{
+  position:absolute;
+  left:6%;right:6%;
+  border-radius:18px;
+  background:transparent;
+  border:none;
+  cursor:pointer;
+  display:block;
+  text-decoration:none;
+}
+/* 파출 정보 카드 위치 (이미지 기준 %) */
+.hit-dispatch{
+  top:27%;
+  height:21%;
+}
+.hit-dispatch:active{ background:rgba(255,255,255,.1); }
+
+/* 입사 퇴사 카드 위치 */
+.hit-worker{
+  top:52%;
+  height:21%;
+}
+.hit-worker:active{ background:rgba(0,0,0,.05); }
+</style>
+</head>
+<body>
+<div class="scene">
+  <img src="hub-bg.png" alt="최우영씨푸드그룹">
+  <a class="hit hit-dispatch" href="https://staff-portal2-mu.vercel.app"></a>
+  <a class="hit hit-worker"   href="https://staff-portal1-mu.vercel.app"></a>
+</div>
+<script>
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+</script>
+</body>
+</html>
