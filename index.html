@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>근로자 명단</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Montserrat:wght@500;600&display=swap');
+:root{--gold:#B8952A;--ink:#1A1A18;--ink4:#A8A8A0;--line:#E8E8E0;--ivory:#FAFAF7;--white:#FFFFFF;--entry:#2A5C3A;--entry-bg:#F0F6F2;--exit:#7A2828;--exit-bg:#FAF0F0;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--ivory);color:var(--ink);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding-bottom:60px;}
+.topbar{width:100%;max-width:520px;padding:20px 24px 0;text-align:center;}
+.brand{font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;letter-spacing:.32em;color:var(--gold);text-transform:uppercase;display:block;}
+.page-title{width:100%;max-width:520px;padding:20px 24px 20px;text-align:center;}
+.page-title h1{font-size:26px;font-weight:700;}
+.page-title p{font-family:'Montserrat',sans-serif;font-size:9px;font-weight:500;letter-spacing:.24em;color:var(--ink4);margin-top:6px;}
+.tabs{width:100%;max-width:520px;padding:0 24px 16px;display:flex;gap:10px;}
+.tab{flex:1;padding:13px 8px;border:1px solid var(--line);background:var(--white);color:var(--ink4);border-radius:8px;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .18s;}
+.tab.entry.on{background:var(--entry-bg);border-color:var(--entry);color:var(--entry);font-weight:700;}
+.tab.exit.on {background:var(--exit-bg); border-color:var(--exit); color:var(--exit); font-weight:700;}
+.card{width:100%;max-width:520px;background:var(--white);border-radius:16px;box-shadow:0 2px 16px rgba(0,0,0,.06);margin:0 24px;overflow:hidden;}
+.form{display:none;} .form.on{display:block;}
+.section{padding:20px 20px 0;}
+.section-title{font-size:11px;font-weight:600;letter-spacing:.14em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px;}
+.chip{padding:8px 16px;border:1.5px solid var(--line);border-radius:20px;background:var(--white);color:var(--ink4);font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;}
+.chip.active{border-color:var(--ink);background:var(--ink);color:var(--white);}
+.row{display:flex;align-items:center;border-bottom:1px solid var(--line);min-height:52px;}
+.lbl{font-size:12px;color:var(--ink4);min-width:80px;flex-shrink:0;}
+.inp{flex:1;border:none;background:transparent;font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:500;color:var(--ink);outline:none;padding:14px 0;}
+.inp::placeholder{color:#CCC;font-weight:400;}
+input[type=date].inp{color:var(--ink);}
+.salary-val{font-size:15px;font-weight:700;color:var(--gold);}
+.divider{height:1px;background:var(--line);margin:0 20px;}
+.section-rows{padding:0 20px;}
+.btn-main{width:calc(100% - 48px);max-width:472px;margin:20px 24px 0;padding:18px;border:none;border-radius:12px;font-family:'Noto Sans KR',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;}
+.btn-entry{background:var(--entry);color:var(--white);}
+.btn-exit {background:var(--exit); color:var(--white);}
+.btn-main:active{opacity:.85;transform:scale(.99);}
+
+/* 미리보기 모달 */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:flex-end;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal-sheet{width:100%;max-width:520px;background:var(--white);border-radius:20px 20px 0 0;padding:12px 24px 48px;max-height:90vh;overflow-y:auto;}
+.modal-handle{width:36px;height:4px;background:var(--line);border-radius:2px;margin:0 auto 16px;}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.modal-title-txt{font-size:17px;font-weight:700;}
+.modal-close{width:32px;height:32px;border:none;background:var(--line);border-radius:50%;font-size:16px;cursor:pointer;}
+.preview-card{background:var(--ivory);border:1px solid var(--line);border-radius:12px;padding:20px 18px;margin-bottom:16px;}
+.pc-title{font-size:15px;font-weight:700;margin-bottom:10px;}
+.pc-div{height:1px;background:var(--gold);opacity:.3;margin-bottom:10px;}
+.pc-row{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #F0F0E8;}
+.pc-key{font-size:12px;color:var(--ink4);min-width:76px;}
+.pc-val{font-size:14px;font-weight:500;color:var(--ink);word-break:break-all;}
+.btn-share{width:100%;padding:17px;border:none;border-radius:10px;background:#FEE500;color:#3A1D1D;font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+ .btn-share:active{opacity:.9;}
+.btn-copy{width:100%;padding:15px;border:1.5px solid var(--line);border-radius:10px;background:var(--white);color:var(--ink);font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:10px;}
+.btn-copy:active{opacity:.9;}
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--white);font-size:13px;padding:10px 22px;border-radius:24px;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:200;}
+.toast.show{opacity:1;}
+
+.btn-help{
+  width:calc(100% - 48px);
+  max-width:472px;
+  margin:12px 24px 0;
+  padding:16px;
+  border:1.5px solid #7A2828;
+  border-radius:12px;
+  background:#FAF0F0;
+  color:#7A2828;
+  font-family:'Noto Sans KR',sans-serif;
+  font-size:16px;
+  font-weight:800;
+  cursor:pointer;
+  letter-spacing:-0.02em;
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="brand">CHOI WOOYOUNG SEAFOOD</span>
+</div>
+
+<div class="page-title">
+  <h1>근로자 명단</h1>
+  <p>WORKER INFORMATION</p>
+</div>
+
+<div class="tabs">
+  <button class="tab entry on" id="tab_e" onclick="switchTab('entry')">입사</button>
+  <button class="tab exit"     id="tab_x" onclick="switchTab('exit')">퇴사</button>
+</div>
+
+<div class="card">
+
+  <!-- 입사 폼 -->
+  <div class="form on" id="form_e">
+    <div class="section">
+      <div class="section-title">매장 선택</div>
+      <div class="chips" id="e_store">
+        <button class="chip active" data-val="구로점"   onclick="pick('e_store',this)">구로점</button>
+        <button class="chip"        data-val="여의도점" onclick="pick('e_store',this)">여의도점</button>
+        <button class="chip"        data-val="가산점"   onclick="pick('e_store',this)">가산점</button>
+        <button class="chip"        data-val="영등포점" onclick="pick('e_store',this)">영등포점</button>
+        <button class="chip"        data-val="종로점"   onclick="pick('e_store',this)">종로점</button>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="section-rows">
+      <div class="row"><span class="lbl">입사일</span><input type="date" class="inp" id="e_date"></div>
+      <div class="row"><span class="lbl">성함</span><input class="inp" id="e_name" placeholder="홍길동"></div>
+      <div class="row"><span class="lbl">등록번호</span><input class="inp" id="e_reg" placeholder="123456-1234567" maxlength="14" oninput="fmtReg(this)"></div>
+      <div class="row"><span class="lbl">연락처</span><input type="tel" inputmode="numeric" class="inp" id="e_phone" placeholder="010-1234-5678" maxlength="13" oninput="fmtPhone(this)"></div>
+      <div class="row"><span class="lbl">은행명</span><input class="inp" id="e_bank" placeholder="국민은행"></div>
+      <div class="row"><span class="lbl">계좌번호</span>
+<input class="inp" style="max-width:70px" id="e_acct1" inputmode="numeric">
+<span>-</span>
+<input class="inp" style="max-width:70px" id="e_acct2" inputmode="numeric">
+<span>-</span>
+<input class="inp" id="e_acct3" inputmode="numeric">
+</div>
+      <div class="row"><span class="lbl">이메일</span><input class="inp" id="e_email" placeholder="name@email.com"></div>
+      <div class="row" style="border-bottom:none;padding-bottom:16px;"><span class="lbl">급여</span><span class="salary-val">3,100,000원</span></div>
+    </div>
+  </div>
+
+  <!-- 퇴사 폼 -->
+  <div class="form" id="form_x">
+    <div class="section">
+      <div class="section-title">매장 선택</div>
+      <div class="chips" id="x_store">
+        <button class="chip active" data-val="구로점"   onclick="pick('x_store',this)">구로점</button>
+        <button class="chip"        data-val="여의도점" onclick="pick('x_store',this)">여의도점</button>
+        <button class="chip"        data-val="가산점"   onclick="pick('x_store',this)">가산점</button>
+        <button class="chip"        data-val="영등포점" onclick="pick('x_store',this)">영등포점</button>
+        <button class="chip"        data-val="종로점"   onclick="pick('x_store',this)">종로점</button>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="section-rows">
+      <div class="row"><span class="lbl">퇴사일</span><input type="date" class="inp" id="x_date"></div>
+      <div class="row"><span class="lbl">성함</span><input class="inp" id="x_name" placeholder="홍길동"></div>
+      <div class="row"><span class="lbl">등록번호</span><input class="inp" id="x_reg" placeholder="123456-1234567" maxlength="14" oninput="fmtReg(this)"></div>
+      <div class="row"><span class="lbl">연락처</span><input type="tel" inputmode="numeric" class="inp" id="x_phone" placeholder="010-1234-5678" maxlength="13" oninput="fmtPhone(this)"></div>
+      <div class="row"><span class="lbl">은행명</span><input class="inp" id="x_bank" placeholder="국민은행"></div>
+      <div class="row"><span class="lbl">계좌번호</span>
+<input class="inp" style="max-width:70px" id="x_acct1" inputmode="numeric">
+<span>-</span>
+<input class="inp" style="max-width:70px" id="x_acct2" inputmode="numeric">
+<span>-</span>
+<input class="inp" id="x_acct3" inputmode="numeric">
+</div>
+      <div class="row"><span class="lbl">이메일</span><input class="inp" id="x_email" placeholder="name@email.com"></div>
+      <div class="row" style="border-bottom:none;padding-bottom:16px;"><span class="lbl">급여</span><span class="salary-val">3,100,000원</span></div>
+    </div>
+    <button class="btn-help" type="button" onclick="openExitHelp()">퇴사 정보 쉽게하는 방법</button>
+  </div>
+
+</div>
+
+<button class="btn-main btn-entry" id="btn_share" onclick="openPreview()">미리보기 후 공유하기</button>
+
+<!-- 미리보기 모달 -->
+<div class="modal-bg" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-head">
+      <span class="modal-title-txt">미리보기</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="preview-card" id="previewCard"></div>
+    <button class="btn-share" onclick="doShare()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      카카오톡으로 공유하기
+    </button>
+    <button class="btn-copy" onclick="copyShareText()">내용 복사하기</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let _mode = 'entry';
+let _shareText = '';
+
+function switchTab(mode){
+  _mode = mode;
+  document.getElementById('tab_e').className = 'tab entry'+(mode==='entry'?' on':'');
+  document.getElementById('tab_x').className = 'tab exit' +(mode==='exit' ?' on':'');
+  document.getElementById('form_e').className = 'form'+(mode==='entry'?' on':'');
+  document.getElementById('form_x').className = 'form'+(mode==='exit' ?' on':'');
+  const btn = document.getElementById('btn_share');
+  btn.className = 'btn-main '+(mode==='entry'?'btn-entry':'btn-exit');
+}
+
+function pick(gid,btn){
+  document.querySelectorAll('#'+gid+' .chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+}
+function getChip(gid){
+  const a=document.querySelector('#'+gid+' .chip.active');
+  return a?a.dataset.val:'—';
+}
+function fmtReg(el){
+  let v=el.value.replace(/\D/g,'');
+  if(v.length>6) v=v.slice(0,6)+'-'+v.slice(6,13);
+  el.value=v;
+}
+function fmtPhone(el){
+  let v=el.value.replace(/\D/g,'');
+  if(v.length>3 && v.length<=7){
+    v=v.slice(0,3)+'-'+v.slice(3);
+  }else if(v.length>7){
+    v=v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7,11);
+  }
+  el.value=v;
+}
+function showToast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+
+window.addEventListener('DOMContentLoaded',()=>{
+  const t=new Date();
+  const d=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+  document.getElementById('e_date').value=d;
+  document.getElementById('x_date').value=d;
+});
+
+function pcRow(k,v){
+  return '<div class="pc-row"><span class="pc-key">'+k+'</span><span class="pc-val">'+v+'</span></div>';
+}
+
+function openPreview(){
+  const p = _mode==='entry'?'e':'x';
+  const typeLabel = _mode==='entry'?'입사':'퇴사';
+  const dateLabel = _mode==='entry'?'입사일':'퇴사일';
+
+  const dateRaw = document.getElementById(p+'_date').value;
+  let dateStr='—';
+  if(dateRaw){ const[y,m,d]=dateRaw.split('-'); dateStr=y+'년 '+m+'월 '+d+'일'; }
+
+  const store = getChip(p+'_store');
+  const name  = document.getElementById(p+'_name').value  || '—';
+  const reg   = document.getElementById(p+'_reg').value   || '—';
+  const phone = document.getElementById(p+'_phone')?.value || '—';
+  const bank  = document.getElementById(p+'_bank').value  || '—';
+  const acct =
+((document.getElementById(p+'_acct1')?.value||'') +
+'-' +
+(document.getElementById(p+'_acct2')?.value||'') +
+'-' +
+(document.getElementById(p+'_acct3')?.value||'')).replace(/^--$|^-|-$/g,'') || '—';
+  const email = document.getElementById(p+'_email').value || '—';
+  const salary = '3,100,000원';
+
+  _shareText =
+    '[최우영씨푸드 '+typeLabel+' 근로자 정보]\n\n'+
+    '매장     : '+store+'\n'+
+    dateLabel+'  : '+dateStr+'\n'+
+    '성함     : '+name+'\n'+
+    '등록번호 : '+reg+'\n'+
+    '연락처   : '+phone+'\n'+
+    '은행명   : '+bank+'\n'+
+    '계좌번호 : '+acct+'\n'+
+    '이메일   : '+email+'\n'+
+    '급여     : '+salary;
+
+  document.getElementById('previewCard').innerHTML =
+    '<div class="pc-title">[최우영씨푸드 '+typeLabel+' 근로자 정보]</div>'+
+    '<div class="pc-div"></div>'+
+    pcRow('매장', store)+
+    pcRow(dateLabel, dateStr)+
+    pcRow('성함', name)+
+    pcRow('등록번호', reg)+
+    pcRow('연락처', phone)+
+    pcRow('은행명', bank)+
+    pcRow('계좌번호', acct)+
+    pcRow('이메일', email)+
+    pcRow('급여', salary);
+
+  document.getElementById('modal').classList.add('open');
+}
+
+async function copyShareText(){
+  try{
+    await navigator.clipboard.writeText(_shareText);
+    showToast('내용이 복사됐습니다. 카카오톡에 붙여넣기 해주세요.');
+  }catch(e){
+    const ta=document.createElement('textarea');
+    ta.value=_shareText;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('내용이 복사됐습니다. 카카오톡에 붙여넣기 해주세요.');
+  }
+}
+
+async function doShare(){
+  closeModal();
+  if(navigator.share){
+    try{ await navigator.share({text:_shareText}); return; }catch(e){ if(e.name==='AbortError') return; }
+  }
+  // fallback: 클립보드 복사
+  try{
+    await navigator.clipboard.writeText(_shareText);
+    showToast('클립보드에 복사됐습니다. 카카오톡에 붙여넣기 해주세요.');
+  }catch(e){
+    showToast('공유 기능을 지원하지 않는 환경입니다.');
+  }
+}
+
+function openExitHelp(){
+  const w = window.open('', '_blank');
+  if(!w){
+    showToast('팝업이 차단되었습니다. 브라우저 팝업 허용 후 다시 눌러주세요.');
+    return;
+  }
+  const page = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>퇴사 정보 쉽게하는 방법</title>
+<style>
+body{margin:0;background:#FAFAF7;font-family:'Noto Sans KR',Arial,sans-serif;color:#1A1A18;padding:18px;}
+.wrap{max-width:760px;margin:0 auto;}
+h1{text-align:center;font-size:25px;margin:12px 0 6px;}
+.sub{text-align:center;color:#8B8B82;font-size:15px;margin-bottom:18px;}
+.guide{background:white;border:1px solid #E8E8E0;border-radius:20px;padding:18px;box-shadow:0 4px 18px rgba(0,0,0,.06);}
+.step{display:flex;gap:14px;align-items:flex-start;border-bottom:1px solid #EFEFE8;padding:16px 0;}
+.step:last-child{border-bottom:none;}
+.num{width:38px;height:38px;border-radius:50%;background:#7A2828;color:white;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;flex:0 0 38px;}
+.txt{font-size:19px;line-height:1.45;font-weight:700;}
+.txt small{display:block;font-size:14px;color:#777;font-weight:500;margin-top:4px;}
+.mock{margin-top:10px;background:#F6F6F1;border:1px dashed #B8952A;border-radius:12px;padding:12px;font-size:18px;line-height:1.6;}
+.red{color:#B01818;font-weight:900;}
+.gold{color:#B8952A;font-weight:900;}
+.box{display:inline-block;background:#FEE500;padding:4px 10px;border-radius:8px;font-weight:900;}
+.final{margin-top:18px;background:#fff8df;border:1px solid #ead28a;border-radius:16px;padding:16px;text-align:center;font-size:20px;font-weight:900;}
+button{width:100%;margin-top:18px;padding:16px;border:0;border-radius:12px;background:#1A1A18;color:white;font-size:17px;font-weight:800;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>퇴사 정보 쉽게하는 방법</h1>
+  <div class="sub">카카오톡에서 입사 정보를 찾아서 퇴사 정보로 바꾸는 순서</div>
+
+  <div class="guide">
+    <div class="step">
+      <div class="num">1</div>
+      <div class="txt">단체톡을 열고 가장 위쪽 <span class="box">돋보기 🔍</span>를 누르세요.
+        <small>검색 버튼입니다.</small>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">2</div>
+      <div class="txt"> 상단 대화내용 검색에 키보드로 <span class="gold">입사</span>라고 입력후 키보드에 🔍누르면
+        <small>보낸 [입사] 정보가 나옵니다. ˄ 위로 ˅ 아래로 찾아 </small>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">3</div>
+      <div class="txt">해당 직원의 입사 정보를 길게 눌러 <span class="gold">복사</span>하세요.</div>
+    </div>
+
+    <div class="step">
+      <div class="num">4</div>
+      <div class="txt">퇴사 정보 입력칸에 <span class="gold">붙여넣기</span> 하세요.</div>
+    </div>
+
+    <div class="step">
+      <div class="num">5</div>
+      <div class="txt"><span class="red">입사일</span> 글자를 지우고 <span class="red">퇴사일</span>로 바꾸세요.
+        <div class="mock">
+           입사일 :  삭제 <br>
+           퇴사일 : 입력
+       </div>
+    </div>
+  </div>
+
+  <div class="final">요약: 날짜만 퇴사일로 바꾸면 됩니다.</div>
+  <button onclick="window.print()">이미지처럼 출력 / 저장하기</button>
+</div>
+</body>
+</html>`;
+  w.document.open();
+  w.document.write(page);
+  w.document.close();
+}
+
+</script>
+</body>
+</html>
